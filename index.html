@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. Ahmed Wael Chatbot</title>
+    <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/github.min.css">
+    <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/monokai.min.css" disabled>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: background 0.3s;
+        }
+        body.dark-mode {
+            background: linear-gradient(135deg, #1e1e1e, #333);
+        }
+        .chat-container {
+            width: 90%;
+            max-width: 600px;
+            height: 80vh;
+            max-height: 800px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+        @media (max-width: 480px) {
+            .chat-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+        }
+        .dark-mode .chat-container {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.18);
+        }
+        .chat-header {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dark-mode .chat-header {
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+            color: #fff;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 80%;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .user-message {
+            align-self: flex-end;
+            background: #007bff;
+            color: white;
+        }
+        .bot-message {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.3);
+            color: #333;
+        }
+        .dark-mode .bot-message {
+            background: rgba(0, 0, 0, 0.3);
+            color: #ddd;
+        }
+        .dark-mode .user-message {
+            background: #0056b3;
+            color: #fff;
+        }
+        .message:hover .copy-btn {
+            opacity: 1;
+        }
+        .copy-btn {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            color: inherit;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .copy-btn:hover {
+            opacity: 1;
+        }
+        .code-container {
+            max-width: 90%;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            position: relative;
+            align-self: flex-start;
+            overflow: hidden;
+        }
+        .dark-mode .code-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .code-header {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+            color: #666;
+        }
+        .dark-mode .code-header {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+        }
+        .code-language {
+            text-transform: uppercase;
+        }
+        .code-container pre {
+            margin: 0;
+            padding: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+            color: #333;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .dark-mode .code-container pre {
+            color: #ddd;
+        }
+        .code-container pre code {
+            background: transparent !important;
+        }
+        .code-container:hover .copy-btn {
+            opacity: 1;
+        }
+        .typing {
+            font-style: italic;
+            color: #888;
+        }
+        .dark-mode .typing {
+            color: #aaa;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .dark-mode .chat-input {
+            border-top: 1px solid rgba(0, 0, 0, 0.18);
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #333;
+            outline: none;
+        }
+        .dark-mode .chat-input input {
+            background: rgba(0, 0, 0, 0.2);
+            color: #ddd;
+        }
+        .chat-input button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: #007bff;
+            color: white;
+            font-size: 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .dark-mode .chat-input button {
+            background: #0056b3;
+        }
+        .chat-input button:hover {
+            background: #0056b3;
+        }
+        .dark-mode .chat-input button:hover {
+            background: #003d80;
+        }
+        .mode-toggle, .new-chat-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #333;
+            opacity: 1;
+            margin-left: 10px;
+        }
+        .dark-mode .mode-toggle, .dark-mode .new-chat-btn {
+            color: #ddd;
+        }
+        .model-select {
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #333;
+            outline: none;
+            margin-right: 10px;
+        }
+        .dark-mode .model-select {
+            background: rgba(0, 0, 0, 0.2);
+            color: #ddd;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+        }
+        .dark-mode ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            Mr. Ahmed Wael
+            <div>
+                <button class="new-chat-btn" id="new-chat-button">&#128260;</button> <!-- Refresh icon for new chat -->
+                <button class="mode-toggle" id="dark-mode-toggle">&#127769;</button> <!-- Moon for dark, can toggle to sun -->
+            </div>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input">
+            <select id="model-select" class="model-select">
+                <option value="deepseek/deepseek-chat-v3.1:free">Fast Model (Free)</option>
+                <option value="gpt-3.5-turbo">Balanced Model</option>
+                <!-- أضف المزيد من النماذج هنا بناءً على احتياجاتك -->
+            </select>
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-button">&#10148;</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+    <script>
+        const apiKey = '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';
+        const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+        let messages = [{
+            role: 'system',
+            content: 'The current date is September 14, 2025. You are Mr. Ahmed Wael Chatbot, created and programmed by Ahmed Wael. You are a versatile assistant designed to help students with any questions in various subjects, including English language, programming, mathematics, science, and more. Your knowledge is up to date as of September 2025. You can assist with homework, explain concepts, provide code examples, solve problems, and answer queries on any topic. When providing programming code, always enclose it in triple backticks with the language specified, like ```python\\ncode here\\n```. Provide helpful, accurate, and educational responses.'
+        }];
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const newChatButton = document.getElementById('new-chat-button');
+        const modelSelect = document.getElementById('model-select');
+        let isDarkMode = false;
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            darkModeToggle.innerHTML = isDarkMode ? '&#9728;' : '&#127769;'; // Sun for light, Moon for dark
+            document.getElementById('hljs-light').disabled = isDarkMode;
+            document.getElementById('hljs-dark').disabled = !isDarkMode;
+        }
+
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+
+        function startNewChat() {
+            messages = [{
+                role: 'system',
+                content: 'The current date is September 14, 2025. You are Mr. Ahmed Wael Chatbot, created and programmed by Ahmed Wael. You are a versatile assistant designed to help students with any questions in various subjects, including English language, programming, mathematics, science, and more. Your knowledge is up to date as of September 2025. You can assist with homework, explain concepts, provide code examples, solve problems, and answer queries on any topic. When providing programming code, always enclose it in triple backticks with the language specified, like ```python\\ncode here\\n```. Provide helpful, accurate, and educational responses.'
+            }];
+            chatMessages.innerHTML = '';
+        }
+
+        newChatButton.addEventListener('click', startNewChat);
+
+        function addMessage(content, isUser, isTyping = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+            if (isTyping) {
+                messageDiv.classList.add('typing');
+                content = 'typing...';
+            }
+            messageDiv.textContent = content;
+
+            if (!isTyping) {
+                const copyBtn = document.createElement('button');
+                copyBtn.classList.add('copy-btn');
+                copyBtn.textContent = '📋';
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(content);
+                    copyBtn.textContent = '✅';
+                    setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
+                };
+                messageDiv.appendChild(copyBtn);
+            }
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return messageDiv;
+        }
+
+        function addCodeBlock(code, language = '') {
+            const codeContainer = document.createElement('div');
+            codeContainer.classList.add('code-container');
+
+            if (language) {
+                const codeHeader = document.createElement('div');
+                codeHeader.classList.add('code-header');
+                const langSpan = document.createElement('span');
+                langSpan.classList.add('code-language');
+                langSpan.textContent = language;
+                codeHeader.appendChild(langSpan);
+                codeContainer.appendChild(codeHeader);
+            }
+
+            const pre = document.createElement('pre');
+            const codeElem = document.createElement('code');
+            codeElem.textContent = code;
+            if (language) {
+                codeElem.className = `language-${language}`;
+                hljs.highlightElement(codeElem);
+            }
+            pre.appendChild(codeElem);
+            codeContainer.appendChild(pre);
+
+            const copyBtn = document.createElement('button');
+            copyBtn.classList.add('copy-btn');
+            copyBtn.textContent = '📋';
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(code);
+                copyBtn.textContent = '✅';
+                setTimeout(() => { copyBtn.textContent = '📋'; }, 2000);
+            };
+            if (language) {
+                codeHeader.appendChild(copyBtn);
+            } else {
+                codeContainer.appendChild(copyBtn);
+            }
+
+            chatMessages.appendChild(codeContainer);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function processBotReply(reply) {
+            const codeRegex = /```([\w+]*)\n?([\s\S]*?)```/g;
+            let lastIndex = 0;
+            let match;
+
+            while ((match = codeRegex.exec(reply)) !== null) {
+                // Add text before code block
+                if (match.index > lastIndex) {
+                    const text = reply.substring(lastIndex, match.index).trim();
+                    if (text) addMessage(text, false);
+                }
+
+                // Add code block
+                const language = match[1].trim();
+                const code = match[2].trim();
+                addCodeBlock(code, language);
+
+                lastIndex = match.index + match[0].length;
+            }
+
+            // Add remaining text after last code block
+            if (lastIndex < reply.length) {
+                const text = reply.substring(lastIndex).trim();
+                if (text) addMessage(text, false);
+            }
+        }
+
+        function stripMarkdown(text) {
+            return text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#/g, '').replace(/`(?!``)/g, '');
+        }
+
+        async function sendMessage() {
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+
+            addMessage(userMessage, true);
+            messages.push({ role: 'user', content: userMessage });
+            userInput.value = '';
+
+            const typingDiv = addMessage('', false, true);
+
+            try {
+                const selectedModel = modelSelect.value;
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': 'https://example.com',
+                        'X-Title': 'Mr. Ahmed Wael Chatbot'
+                    },
+                    body: JSON.stringify({
+                        model: selectedModel,
+                        messages: messages
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+
+                const data = await response.json();
+                let botReply = data.choices[0].message.content;
+                botReply = stripMarkdown(botReply);
+
+                chatMessages.removeChild(typingDiv);
+                processBotReply(botReply);
+
+                messages.push({ role: 'assistant', content: botReply });
+            } catch (error) {
+                typingDiv.textContent = 'Error: Could not get response.';
+                typingDiv.classList.remove('typing');
+            }
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
