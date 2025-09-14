@@ -40,6 +40,47 @@
                 width: 100%;
                 height: 100vh;
                 border-radius: 0;
+                max-height: none;
+            }
+            .chat-header {
+                font-size: 16px;
+                padding: 10px;
+            }
+            .chat-messages {
+                padding: 10px;
+            }
+            .chat-input {
+                padding: 10px;
+            }
+            .chat-input input {
+                padding: 8px;
+                font-size: 14px;
+            }
+            .chat-input button {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+                margin-left: 5px;
+            }
+            .message {
+                max-width: 90%;
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            .code-container pre {
+                font-size: 12px;
+            }
+        }
+        @media (min-width: 481px) and (max-width: 768px) {
+            .chat-container {
+                width: 95%;
+                height: 85vh;
+            }
+            .chat-header {
+                font-size: 17px;
+            }
+            .message {
+                max-width: 85%;
             }
         }
         .dark-mode .chat-container {
@@ -177,6 +218,7 @@
             padding: 15px;
             border-top: 1px solid rgba(255, 255, 255, 0.18);
             background: rgba(255, 255, 255, 0.1);
+            flex-wrap: nowrap;
         }
         .dark-mode .chat-input {
             border-top: 1px solid rgba(0, 0, 0, 0.18);
@@ -190,6 +232,7 @@
             background: rgba(255, 255, 255, 0.2);
             color: #333;
             outline: none;
+            min-width: 0;
         }
         .dark-mode .chat-input input {
             background: rgba(0, 0, 0, 0.2);
@@ -208,6 +251,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-shrink: 0;
         }
         .dark-mode .chat-input button {
             background: #0056b3;
@@ -228,19 +272,6 @@
             margin-left: 10px;
         }
         .dark-mode .mode-toggle, .dark-mode .new-chat-btn {
-            color: #ddd;
-        }
-        .model-select {
-            padding: 10px;
-            border: none;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: #333;
-            outline: none;
-            margin-right: 10px;
-        }
-        .dark-mode .model-select {
-            background: rgba(0, 0, 0, 0.2);
             color: #ddd;
         }
         ::-webkit-scrollbar {
@@ -269,11 +300,6 @@
         </div>
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input">
-            <select id="model-select" class="model-select">
-                <option value="deepseek/deepseek-chat-v3.1:free">Fast Model (Free)</option>
-                <option value="gpt-3.5-turbo">Balanced Model</option>
-                <!-- أضف المزيد من النماذج هنا بناءً على احتياجاتك -->
-            </select>
             <input type="text" id="user-input" placeholder="Type your message...">
             <button id="send-button">&#10148;</button>
         </div>
@@ -281,8 +307,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
     <script>
-        const apiKey = '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';
-        const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+        const apiKey = 'AIzaSyCdgSd5xSg13l3vLHpu3esq3JEsx1rq-C8';
+        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
         let messages = [{
             role: 'system',
             content: 'The current date is September 14, 2025. You are Mr. Ahmed Wael Chatbot, created and programmed by Ahmed Wael. You are a versatile assistant designed to help students with any questions in various subjects, including English language, programming, mathematics, science, and more. Your knowledge is up to date as of September 2025. You can assist with homework, explain concepts, provide code examples, solve problems, and answer queries on any topic. When providing programming code, always enclose it in triple backticks with the language specified, like ```python\\ncode here\\n```. Provide helpful, accurate, and educational responses.'
@@ -292,7 +318,6 @@
         const sendButton = document.getElementById('send-button');
         const darkModeToggle = document.getElementById('dark-mode-toggle');
         const newChatButton = document.getElementById('new-chat-button');
-        const modelSelect = document.getElementById('model-select');
         let isDarkMode = false;
 
         function toggleDarkMode() {
@@ -426,18 +451,23 @@
             const typingDiv = addMessage('', false, true);
 
             try {
-                const selectedModel = modelSelect.value;
+                const systemInstruction = {
+                    parts: [{ text: messages[0].content }]
+                };
+                const contents = messages.slice(1).map(msg => ({
+                    role: msg.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: msg.content }]
+                }));
+
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${apiKey}`,
                         'Content-Type': 'application/json',
-                        'HTTP-Referer': 'https://example.com',
-                        'X-Title': 'Mr. Ahmed Wael Chatbot'
+                        'x-goog-api-key': apiKey
                     },
                     body: JSON.stringify({
-                        model: selectedModel,
-                        messages: messages
+                        contents: contents,
+                        systemInstruction: systemInstruction
                     })
                 });
 
@@ -446,13 +476,13 @@
                 }
 
                 const data = await response.json();
-                let botReply = data.choices[0].message.content;
+                let botReply = data.candidates[0].content.parts[0].text;
                 botReply = stripMarkdown(botReply);
 
                 chatMessages.removeChild(typingDiv);
                 processBotReply(botReply);
 
-                messages.push({ role: 'assistant', content: botReply });
+                messages.push({ role: 'model', content: botReply });
             } catch (error) {
                 typingDiv.textContent = 'Error: Could not get response.';
                 typingDiv.classList.remove('typing');
